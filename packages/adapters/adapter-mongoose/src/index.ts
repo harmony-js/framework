@@ -191,11 +191,13 @@ const AdapterMongoose : Adapter<AdapterMongooseConfiguration, ExposedVariables> 
 
       const filter = Object.keys(args.filter || {}).length ? sanitizeFilter(args.filter) : undefined
 
-      // TODO add sort support
+      const sort = args.sort ? toMongoDottedObject(args.sort) : undefined
+
       return buildPopulatedQuery({
         query: mongooseModel
           .findOne(filter || {})
-          .skip(args.skip || 0),
+          .skip(args.skip || 0)
+          .sort(sort || {}),
       })
     },
 
@@ -206,12 +208,14 @@ const AdapterMongoose : Adapter<AdapterMongooseConfiguration, ExposedVariables> 
 
       const filter = Object.keys(args.filter || {}).length ? sanitizeFilter(args.filter) : undefined
 
-      // TODO add sort support
+      const sort = args.sort ? toMongoDottedObject(args.sort) : undefined
+
       return buildPopulatedQuery({
         query: mongooseModel
           .find(filter || {})
           .limit(args.limit || 0)
-          .skip(args.skip || 0),
+          .skip(args.skip || 0)
+          .sort(sort || {}),
       })
     },
 

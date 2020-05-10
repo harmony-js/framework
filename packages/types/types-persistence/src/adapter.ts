@@ -12,9 +12,10 @@ type Entity = {[key: string]: any} | null
 type CountResolverArgs = {
   filter?: {[key: string]: any}
 }
+type SortObject = {[key: string]: number | SortObject}
 type ReadResolverArgs = CountResolverArgs & {
   skip?: number
-  sort?: any
+  sort?: SortObject
 }
 type ReadManyResolverArgs = ReadResolverArgs & {
   limit?: number

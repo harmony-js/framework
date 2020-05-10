@@ -1,6 +1,6 @@
 import {
-  ComputedField, ComputedQuery, IProperty, IPropertyID, IPropertyUndiscriminated, Model, PropertyMode, Resolver,
-  Resolvers, SanitizedModel, Schema, Scopes,
+  ComputedField, ComputedQuery, IProperty, IPropertyID, IPropertySchema, IPropertyUndiscriminated,
+  Model, PropertyMode, Resolver, Resolvers, SanitizedModel, Schema, Scopes,
 } from '@harmonyjs/types-persistence'
 
 import { ApolloError } from 'apollo-server-core'
@@ -22,7 +22,7 @@ function extendField(field: ComputedQuery, modelName: string): { type?: IPropert
         args: {
           filter: PropertyFactory({ type: 'raw', of: `${modelName}FilterInput`, name: `${modelName}Filter` }),
           skip: Types.Number,
-          sort: Types.Number,
+          sort: PropertyFactory({ type: 'raw', of: `${modelName}SortInput`, name: `${modelName}Sort` }),
         },
       }
     }
@@ -33,7 +33,7 @@ function extendField(field: ComputedQuery, modelName: string): { type?: IPropert
           filter: PropertyFactory({ type: 'raw', of: `${modelName}FilterInput`, name: `${modelName}Filter` }),
           skip: Types.Number,
           limit: Types.Number,
-          sort: Types.Number,
+          sort: PropertyFactory({ type: 'raw', of: `${modelName}SortInput`, name: `${modelName}Sort` }),
         },
       }
     }
@@ -381,8 +381,25 @@ export function typeIdsAndReferences({ models } : { models: SanitizedModel[] }) 
 export function printSchema({ model }: { model: SanitizedModel }) {
   const outputSchema: Schema = {}
   const inputFilterSchema: Schema = {}
+  const inputSortSchema: Schema = {}
   const inputCreateSchema: Schema = {}
   const inputUpdateSchema: Schema = {}
+
+  // Allow sorting by nested fields
+  const toInputSortSchema = (schema : IPropertySchema) => {
+    const sortSchema: Schema = {}
+
+    Object.keys(schema.of)
+      .forEach((prop) => {
+        if (schema.of[prop].type === 'schema') {
+          sortSchema[prop] = toInputSortSchema(sortSchema[prop] as IPropertySchema)
+        } else {
+          sortSchema[prop] = Types.Number
+        }
+      })
+
+    return Types.Schema.of(sortSchema)
+  }
 
   // Divide schema keys between input fields and output fields
   const extract = (schema: { [key: string]: IProperty }) => {
@@ -394,6 +411,11 @@ export function printSchema({ model }: { model: SanitizedModel }) {
         }
         if (mode.includes(PropertyMode.INPUT) || mode.length < 1) {
           inputFilterSchema[key] = schema[key].clone()
+          if (!['schema'].includes(schema[key].type)) {
+            inputSortSchema[key] = Types.Number
+          } else if (schema[key].type === 'schema') {
+            inputSortSchema[key] = toInputSortSchema(schema[key] as IPropertySchema)
+          }
           inputCreateSchema[key] = schema[key].clone()
           inputUpdateSchema[key] = schema[key].clone();
 
@@ -445,6 +467,9 @@ export function printSchema({ model }: { model: SanitizedModel }) {
   const inputs = model.external ? '' : `
 # Filter Schema
 ${sanitizeSchema({ schema: inputFilterSchema, name: `${model.name}Filter` }).graphqlInputSchema}  
+
+# Sort Schema
+${sanitizeSchema({ schema: inputSortSchema, name: `${model.name}Sort` }).graphqlInputSchema}  
 
 # Create Schema
 ${sanitizeSchema({ schema: inputCreateSchema, name: `${model.name}Create` }).graphqlInputSchema}  
