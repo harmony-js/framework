@@ -32,8 +32,7 @@ of the framework (no pun intended).
 
 Here is a quick preview of what the final output will look like:
 
-```
-[TODO: Add image]
-```
+![tutorial result](/img/harmony-tutorial.gif "Tutorial Result")
+
 
 You can grab the full, finished code here: [Github Repository](https://github.com/harmony-js/tutorial).
