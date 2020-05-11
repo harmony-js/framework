@@ -282,6 +282,13 @@ export function createN1QLBuilders({ config } : { config: AdapterCouchbaseConfig
       }
 
       const sanitizedSort = toMongoFilterDottedObject(sort)
+      const orderedSort : SortObject = {}
+
+      Object.keys(sanitizedSort)
+        .sort((a, b) => sanitizedSort[b] - sanitizedSort[a])
+        .forEach((key) => {
+          orderedSort[key] = sanitizedSort[key] > 0 ? 1 : -1
+        })
 
       const sortClause = Object.keys(sanitizedSort)
         .reduce((order, field) => `${order} ${field} ${sanitizedSort[field] > 0 ? 'ASC' : 'DESC'},`, 'ORDER BY ')
