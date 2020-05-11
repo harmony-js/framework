@@ -392,7 +392,7 @@ export function printSchema({ model }: { model: SanitizedModel }) {
     Object.keys(schema.of)
       .forEach((prop) => {
         if (schema.of[prop].type === 'schema') {
-          sortSchema[prop] = toInputSortSchema(sortSchema[prop] as IPropertySchema)
+          sortSchema[prop] = toInputSortSchema(schema.of[prop] as IPropertySchema)
         } else {
           sortSchema[prop] = Types.Number
         }

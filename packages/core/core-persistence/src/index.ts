@@ -78,6 +78,13 @@ export default function Persistence<
     get context() {
       return getInternalField('context')
     },
+    set context(ctx) {
+      // Check if context has been initialized
+      getInternalField('context')
+
+      // Override context
+      internal.context = ctx
+    },
     get resolvers() {
       return getInternalField('resolvers')
     },

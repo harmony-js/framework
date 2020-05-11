@@ -36,18 +36,18 @@ export type PersistenceContext = {
 export type PersistenceInstance<
   Models extends {[model: string]: Model} = any,
 > = {
-  configuration: PersistenceConfig<Models>
-  logger: ILogger
+  readonly configuration: PersistenceConfig<Models>
+  readonly logger: ILogger
 
-  models: SanitizedModel[]
+  readonly models: SanitizedModel[]
 
-  events: IEvents
+  readonly events: IEvents
   context: PersistenceContext
-  resolvers: {
+  readonly resolvers: {
     [model in keyof Models]: ModelResolvers<Models[model]['schema']>
   }
 
-  controllers: {
+  readonly controllers: {
     ControllerGraphQL: Controller<{
       path: string
       enablePlayground: boolean
