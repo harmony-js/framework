@@ -99,7 +99,7 @@ export type N1QLBuilders = {
   buildOperatorClause: (key: string, operators: Record<HarmonyOperator, string>) => string,
   buildSanitizedFilterClause: (sanitizedFilter: Record<string, any>, join?: string) => string,
   buildFilterClause: (filter?: Record<string, any>) => string,
-  buildSortClause: (sort?: SortObject) => string,
+  buildOrderByClause: (sort?: SortObject) => string,
   buildQueryString: (type: string, clauses: string[]) => string,
 }
 
@@ -276,7 +276,7 @@ export function createN1QLBuilders({ config } : { config: AdapterCouchbaseConfig
       return builders.buildSanitizedFilterClause(sanitizedFilter)
     },
 
-    buildSortClause(sort) {
+    buildOrderByClause(sort) {
       if (!sort) {
         return ''
       }
