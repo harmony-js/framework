@@ -378,7 +378,7 @@ export function typeIdsAndReferences({ models } : { models: SanitizedModel[] }) 
   })
 }
 
-export function printSchema({ model }: { model: SanitizedModel }) {
+export function printSchema({ model, prefix }: { model: SanitizedModel, prefix: string }) {
   const outputSchema: Schema = {}
   const inputFilterSchema: Schema = {}
   const inputSortSchema: Schema = {}
@@ -448,7 +448,7 @@ export function printSchema({ model }: { model: SanitizedModel }) {
   inputUpdateSchema._id.for(model.adapter)
 
   // Create _operators before adding _and/_or/_nor
-  const ops = createOperatorType({ schema: sanitizeSchema({ schema: inputFilterSchema, name: '' }) })
+  const ops = createOperatorType({ schema: sanitizeSchema({ schema: inputFilterSchema, name: '' }), prefix })
 
   // Add _and, _or, _nor to inputFilterSchema
   inputFilterSchema._and = Types.Array.of(

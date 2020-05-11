@@ -24,6 +24,7 @@ export type PersistenceConfig<
   defaultAdapter: string
   log: LoggerConfig
   strict: boolean
+  prefix: string
 }
 
 type PersistenceContextValue =

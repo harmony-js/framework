@@ -12,6 +12,7 @@ export function configurePersistence({
   configuration.scalars = config.scalars || {}
   configuration.log = config.log || {}
   configuration.strict = !!config.strict
+  configuration.prefix = config.prefix || ''
 
   return configuration as PersistenceConfig
 }

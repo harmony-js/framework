@@ -128,6 +128,7 @@ export default function Persistence<
       const schema = await defineSchema({
         models: internal.models,
         scalars: Object.keys(scalars),
+        prefix: config.prefix,
       })
 
       internal.resolvers = {} as Record<keyof Models, ModelResolvers>

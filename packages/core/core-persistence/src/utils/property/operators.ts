@@ -2,6 +2,8 @@ import {
   IProperty, IPropertyArray, IPropertyRaw, IPropertySchema, IPropertyUndiscriminated, PropertyType,
 } from '@harmonyjs/types-persistence'
 
+import Fletcher from 'fletcher'
+
 import PropertyFactory from 'utils/property/factory'
 import Types from 'utils/types'
 import { extractModelName } from './utils'
@@ -36,6 +38,7 @@ const stringTypes = ['string']
 const complexTypes = ['array', 'schema']
 
 const memoizedOperators : {[key: string]: string} = {}
+const memoizedFletchers : {[key: string]: boolean} = {}
 const operatorTypes : {[key: string]: IPropertySchema} = {}
 
 function buildArrayIdentifier(property : IProperty) : string {
@@ -68,6 +71,18 @@ function buildSchemaIdentifier(schema : {[key: string]: IProperty}): string {
     .join(',')
 }
 
+function buildUniqueHash(identifier : string, prefix : string) : string {
+  let fletcher : number = Fletcher(Buffer.from(identifier, 'utf-8'))
+
+  while (memoizedFletchers[prefix + fletcher]) {
+    fletcher += Math.floor(Math.random() * 1000)
+  }
+
+  memoizedFletchers[prefix + fletcher] = true
+
+  return prefix + fletcher
+}
+
 function createOperator({ operator, type, of } : { operator: Operator, type: PropertyType, of?: any }) {
   const ops = PropertyFactory({
     type: operator.type === 'inherit' ? type : operator.type,
@@ -91,8 +106,10 @@ function makeOperator(operator : Operator, operators : {[key:string]: IProperty}
 
 function createOperatorField({
   property,
+  prefix,
 } : {
   property: IProperty
+  prefix: string
 }) : IPropertyRaw {
   const operators : {[key:string]: IProperty} = {}
 
@@ -100,11 +117,12 @@ function createOperatorField({
     const identifier = `[${buildArrayIdentifier(property.of)}]`
 
     if (!memoizedOperators[identifier]) {
-      memoizedOperators[identifier] = `HarmonyJsOperatorInternal${Object.keys(memoizedOperators).length}`
+      const fletcher = buildUniqueHash(identifier, prefix)
+      memoizedOperators[identifier] = `HarmonyJsOperatorInternal${fletcher}`
       operatorTypes[memoizedOperators[identifier]] = Types.Schema.of({
         exists: Types.Boolean,
-        some: createOperatorField({ property: property.of }),
-        all: createOperatorField({ property: property.of }),
+        some: createOperatorField({ property: property.of, prefix }),
+        all: createOperatorField({ property: property.of, prefix }),
       })
     }
 
@@ -115,10 +133,11 @@ function createOperatorField({
     const identifier = `{${buildSchemaIdentifier(property.of)}}`
 
     if (!memoizedOperators[identifier]) {
-      memoizedOperators[identifier] = `HarmonyJsOperatorInternal${Object.keys(memoizedOperators).length}`
+      const fletcher = buildUniqueHash(identifier, prefix)
+      memoizedOperators[identifier] = `HarmonyJsOperatorInternal${fletcher}`
       operatorTypes[memoizedOperators[identifier]] = Types.Schema.of({
         // eslint-disable-next-line no-use-before-define
-        match: createOperatorType({ schema: property as IPropertySchema }),
+        match: createOperatorType({ schema: property as IPropertySchema, prefix }),
       })
     }
 
@@ -146,11 +165,11 @@ function createOperatorField({
   return Types.Raw.of(`${memoizedOperators[identifier]}Input`)
 }
 
-export function createOperatorType({ schema } : { schema: IPropertySchema }) {
+export function createOperatorType({ schema, prefix } : { schema: IPropertySchema, prefix: string }) {
   const match : {[key: string]: IProperty} = {}
   Object.keys(schema.of)
     .forEach((key) => {
-      match[key] = createOperatorField({ property: schema.of[key] })
+      match[key] = createOperatorField({ property: schema.of[key], prefix })
     })
   return Types.Schema.of(match)
 }

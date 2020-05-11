@@ -13,7 +13,11 @@ import {
   makeResolvers, getResolvers,
 } from 'utils/resolvers'
 
-export async function defineSchema({ models, scalars } : { models: SanitizedModel[], scalars: string[] }) {
+export async function defineSchema({
+  models, scalars, prefix,
+} : {
+  models: SanitizedModel[], scalars: string[], prefix: string
+}) {
   const operatorTypes = getOperatorTypes()
 
   return `# Harmony Scalars
@@ -25,7 +29,7 @@ scalar Number
 ${scalars.map((s) => `scalar ${s}`).join('\n')}
     
 # Types
-${models.map((model) => printSchema({ model })).join('\n')}
+${models.map((model) => printSchema({ model, prefix })).join('\n')}
 
 # Operator Types
 ${Object.keys(operatorTypes).map((operatorType) => {

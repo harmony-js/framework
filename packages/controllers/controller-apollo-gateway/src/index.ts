@@ -135,12 +135,7 @@ const ControllerApolloGateway : Controller<{
       await server.register(apolloServer.createHandler({
         path,
         cors: true,
-        routeOptions:
-          {
-            ...(routeConfig || {}),
-            // @ts-ignore
-            preValidation: [server.authenticate.try],
-          },
+        routeOptions,
       }))
 
       logger.info(`GraphQL endpoint at ${path}`)
