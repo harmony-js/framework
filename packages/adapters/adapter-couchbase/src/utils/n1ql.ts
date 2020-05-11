@@ -92,12 +92,14 @@ export function sanitizeFilter(filter? : Record<string, any>) {
   return ({ ...newFilter })
 }
 
+type SortObject = {[key: string]: number | SortObject}
 export type N1QLBuilders = {
   buildTypeClause: (model: SanitizedModel) => string,
   buildOperatorFieldClause: (n1qlOperation: N1QLOperator, key: string, value: string, operator: string) => string,
   buildOperatorClause: (key: string, operators: Record<HarmonyOperator, string>) => string,
   buildSanitizedFilterClause: (sanitizedFilter: Record<string, any>, join?: string) => string,
   buildFilterClause: (filter?: Record<string, any>) => string,
+  buildSortClause: (sort?: SortObject) => string,
   buildQueryString: (type: string, clauses: string[]) => string,
 }
 
@@ -272,6 +274,19 @@ export function createN1QLBuilders({ config } : { config: AdapterCouchbaseConfig
       sanitizedFilter.$operators = $operators
 
       return builders.buildSanitizedFilterClause(sanitizedFilter)
+    },
+
+    buildSortClause(sort) {
+      if (!sort) {
+        return ''
+      }
+
+      const sanitizedSort = toMongoFilterDottedObject(sort)
+
+      const sortClause = Object.keys(sanitizedSort)
+        .reduce((order, field) => `${order} ${field} ${sanitizedSort[field] > 0 ? 'ASC' : 'DESC'},`, 'ORDER BY ')
+
+      return sortClause.slice(0, -1)
     },
 
     buildQueryString(type, clauses) {

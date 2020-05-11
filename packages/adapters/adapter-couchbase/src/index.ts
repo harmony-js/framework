@@ -97,7 +97,7 @@ const AdapterCouchbase : Adapter<AdapterCouchbaseConfiguration> = function Adapt
           const filterClause = local.builders.buildFilterClause(args.filter)
           const skipClause = (args.skip) ? `OFFSET ${args.skip}` : ''
           const limitClause = 'LIMIT 1'
-          const orderByClause = 'ORDER BY id'
+          const orderByClause = (args.sort) ? local.builders.buildOrderByClause(args.sort) : 'ORDER BY id'
 
           return local.builders.buildQueryString(
             `SELECT ${config.bucket}.*, meta().id`,
@@ -138,8 +138,9 @@ const AdapterCouchbase : Adapter<AdapterCouchbaseConfiguration> = function Adapt
           const filterClause = local.builders.buildFilterClause(args.filter)
           const skipClause = (args.skip) ? `OFFSET ${args.skip}` : ''
           const limitClause = (args.limit) ? `LIMIT ${args.limit}` : ''
-          const orderByClause = (skipClause || limitClause) ? 'ORDER BY id' : ''
-            + ''
+          const defaultOrderByClause = (skipClause || limitClause) ? 'ORDER BY id' : ''
+          const orderByClause = (args.sort) ? local.builders.buildOrderByClause(args.sort) : defaultOrderByClause
+
           return local.builders.buildQueryString(
             `SELECT ${config.bucket}.*, meta().id`,
             [
