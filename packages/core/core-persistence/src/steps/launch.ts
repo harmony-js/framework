@@ -8,11 +8,14 @@ import {
 import { FastifyReply, FastifyRequest } from 'fastify'
 
 import { printSchema } from 'utils/model'
+import { getOperatorTypes } from 'utils/property/operators'
 import {
   makeResolvers, getResolvers,
 } from 'utils/resolvers'
 
 export async function defineSchema({ models, scalars } : { models: SanitizedModel[], scalars: string[] }) {
+  const operatorTypes = getOperatorTypes()
+
   return `# Harmony Scalars
 scalar Date
 scalar JSON
@@ -22,7 +25,14 @@ scalar Number
 ${scalars.map((s) => `scalar ${s}`).join('\n')}
     
 # Types
-${models.map((model) => printSchema({ model })).join('\n')}`
+${models.map((model) => printSchema({ model })).join('\n')}
+
+# Operator Types
+${Object.keys(operatorTypes).map((operatorType) => {
+    operatorTypes[operatorType].name = operatorType
+    return operatorTypes[operatorType].graphqlInputSchema
+  }).join('\n')}
+`
 }
 
 export async function defineResolvers<Models extends string|number|symbol>({

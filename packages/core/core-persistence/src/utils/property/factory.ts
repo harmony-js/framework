@@ -105,11 +105,12 @@ function PropertyFactory({
       }
 
       if (clone.type === 'schema') {
-        const ofSchema = (clone.of as {[key: string]: IProperty})
-        Object.keys(ofSchema).forEach((field) => {
-          ofSchema[field] = ofSchema[field].clone()
+        const ofSchema : {[key: string]: IProperty} = {}
+        Object.keys(clone.of).forEach((field) => {
+          ofSchema[field] = (clone.of as {[key: string]: IProperty})[field].clone()
           ofSchema[field].parent = clone as IProperty
         })
+        clone.of = ofSchema
       }
 
       if (clone.type === 'array') {
