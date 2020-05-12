@@ -100,7 +100,7 @@ const ControllerApolloGateway : Controller<{
         gateway,
         playground: !!enablePlayground,
         introspection: !!enablePlayground,
-        context: (request) => ({
+        context: ({ request }) => ({
           headers: request.headers,
         }),
         subscriptions: false,
