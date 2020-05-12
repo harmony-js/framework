@@ -72,6 +72,11 @@ const AdapterMongoose : Adapter<AdapterMongooseConfiguration, ExposedVariables> 
       })
 
       models.forEach((model : SanitizedModel) => {
+        if (model.schemas.main.of._id) {
+          // eslint-disable-next-line no-param-reassign
+          delete model.schemas.main.of._id
+        }
+
         const schema = new Mongoose.Schema(toMongooseSchema(model.schemas.main, extractAdapterType))
         local.schemas[model.name] = model.schemas.main
         local.externals[model.name] = model.external
