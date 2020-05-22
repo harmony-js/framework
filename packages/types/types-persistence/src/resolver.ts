@@ -17,6 +17,10 @@ type FilterArgs<CurrentSchema extends Schema> = Partial<SchemaInputType<CurrentS
   unknown extends CurrentSchema['_id'] ? { _id?: string } : {}
 )>
 
+type SortArgs<CurrentSchema extends Schema> = {
+  [key in keyof CurrentSchema]?: CurrentSchema[key] extends Schema ? SortArgs<CurrentSchema[key]> : number
+}
+
 type RecordArgs<CurrentSchema extends Schema> = Partial<SchemaInputType<CurrentSchema>> & (
   unknown extends CurrentSchema['_id'] ? { _id: string } : {}
 )
@@ -32,11 +36,13 @@ export type ExtendedArgs<
   > = (
   CrudEnum extends Extension ? any :
   'count' extends Extension ? { filter?: FilterArgs<CurrentSchema> } :
-  'read' extends Extension ? { filter?: FilterArgs<CurrentSchema>, skip?: number } :
-  'get' extends Extension ? { filter?: FilterArgs<CurrentSchema>, skip?: number } :
-  'find' extends Extension ? { filter?: FilterArgs<CurrentSchema>, skip?: number } :
-  'readMany' extends Extension ? { filter?: FilterArgs<CurrentSchema>, skip?: number, limit?: number } :
-  'list' extends Extension ? { filter?: FilterArgs<CurrentSchema>, skip?: number, limit?: number } :
+  'read' extends Extension ? { filter?: FilterArgs<CurrentSchema>, skip?: number, sort?: SortArgs<CurrentSchema> } :
+  'get' extends Extension ? { filter?: FilterArgs<CurrentSchema>, skip?: number, sort?: SortArgs<CurrentSchema> } :
+  'find' extends Extension ? { filter?: FilterArgs<CurrentSchema>, skip?: number, sort?: SortArgs<CurrentSchema> } :
+  'readMany' extends Extension
+    ? { filter?: FilterArgs<CurrentSchema>, skip?: number, limit?: number, sort?: SortArgs<CurrentSchema> } :
+  'list' extends Extension
+    ? { filter?: FilterArgs<CurrentSchema>, skip?: number, limit?: number, sort?: SortArgs<CurrentSchema> } :
 
   'create' extends Extension ? { record: Partial<RecordArgs<CurrentSchema>> } :
   'createMany' extends Extension ? { records: Partial<RecordArgs<CurrentSchema>[]> } :
