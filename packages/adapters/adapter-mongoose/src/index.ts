@@ -27,13 +27,20 @@ type LocalVariables = {
 
 type ExposedVariables = {
   models: Record<string, Mongoose.Model<any>>
-  connection: Connection
+  connection: Connection,
+}
+
+type StaticVariables = {
+  toMongooseSchema: typeof toMongooseSchema
+  filterToMongoQuery: typeof sanitizeFilter
 }
 
 const scalar : Scalar = new GraphQLScalarType(GraphQLObjectId.toConfig())
 scalar.mock = () => '1234567890abcdef12345678'
 
-const AdapterMongoose : Adapter<AdapterMongooseConfiguration, ExposedVariables> = function AdapterMongoose(config) {
+const AdapterMongoose : Adapter<
+  AdapterMongooseConfiguration, ExposedVariables
+> & StaticVariables = function AdapterMongoose(config) {
   const local : LocalVariables = {
     schemas: {},
     externals: {},
@@ -359,5 +366,8 @@ const AdapterMongoose : Adapter<AdapterMongooseConfiguration, ExposedVariables> 
 
   return instance
 }
+
+AdapterMongoose.toMongooseSchema = toMongooseSchema
+AdapterMongoose.filterToMongoQuery = sanitizeFilter
 
 export default AdapterMongoose

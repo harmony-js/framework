@@ -43,9 +43,10 @@ function toMongooseType(
 // eslint-disable-next-line import/prefer-default-export
 export function toMongooseSchema(
   schema : IProperty,
-  extractAdapterType: (adapter: string) => typeof SchemaType,
+  extractAdapterType?: (adapter: string) => typeof SchemaType,
 ) : SchemaDefinition {
   const mongooseSchema : SchemaDefinition = {}
+  const noExtractAdapterType = () => SchemaTypes.ObjectId
 
   if (['schema', 'array'].includes(schema.type)) {
     Object.entries((schema as IPropertySchema|IPropertyArray).of || {})
@@ -55,11 +56,11 @@ export function toMongooseSchema(
         } else if (prop.type === 'array') {
           mongooseSchema[key] = [toMongooseSchema(prop.of as IProperty, extractAdapterType)]
         } else {
-          mongooseSchema[key] = toMongooseType(prop, extractAdapterType)
+          mongooseSchema[key] = toMongooseType(prop, extractAdapterType || noExtractAdapterType)
         }
       })
   } else {
-    return toMongooseType(schema, extractAdapterType) as SchemaDefinition
+    return toMongooseType(schema, extractAdapterType || noExtractAdapterType) as SchemaDefinition
   }
 
   return mongooseSchema
