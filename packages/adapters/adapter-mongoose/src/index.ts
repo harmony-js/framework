@@ -13,7 +13,7 @@ import { AdapterMongooseConfiguration } from 'configuration'
 
 import { toMongoDottedObject } from 'utils/query'
 import { toMongooseSchema } from 'utils/schema'
-import { sanitizeFilter, buildPopulatedQuery } from 'utils/sanitize'
+import { sanitizeFilter, buildPopulatedQuery, sanitizeSort } from 'utils/sanitize'
 
 export * from 'types'
 
@@ -33,6 +33,7 @@ type ExposedVariables = {
 type StaticVariables = {
   toMongooseSchema: typeof toMongooseSchema
   filterToMongoQuery: typeof sanitizeFilter
+  sortToMongoSort: typeof sanitizeSort
 }
 
 const scalar : Scalar = new GraphQLScalarType(GraphQLObjectId.toConfig())
@@ -203,14 +204,7 @@ const AdapterMongoose : Adapter<
 
       const filter = Object.keys(args.filter || {}).length ? sanitizeFilter(args.filter) : undefined
 
-      const sanitizedSort = args.sort ? toMongoDottedObject(args.sort) : {}
-      const sort : any = {}
-
-      Object.keys(sanitizedSort)
-        .sort((a, b) => sanitizedSort[b] - sanitizedSort[a])
-        .forEach((key) => {
-          sort[key] = sanitizedSort[key] > 0 ? 1 : -1
-        })
+      const sort = sanitizeSort(args.sort)
 
       return buildPopulatedQuery({
         query: mongooseModel
@@ -227,14 +221,7 @@ const AdapterMongoose : Adapter<
 
       const filter = Object.keys(args.filter || {}).length ? sanitizeFilter(args.filter) : undefined
 
-      const sanitizedSort = args.sort ? toMongoDottedObject(args.sort) : {}
-      const sort : any = {}
-
-      Object.keys(sanitizedSort)
-        .sort((a, b) => sanitizedSort[b] - sanitizedSort[a])
-        .forEach((key) => {
-          sort[key] = sanitizedSort[key] > 0 ? 1 : -1
-        })
+      const sort = sanitizeSort(args.sort)
 
       return buildPopulatedQuery({
         query: mongooseModel
@@ -369,5 +356,6 @@ const AdapterMongoose : Adapter<
 
 AdapterMongoose.toMongooseSchema = toMongooseSchema
 AdapterMongoose.filterToMongoQuery = sanitizeFilter
+AdapterMongoose.sortToMongoSort = sanitizeSort
 
 export default AdapterMongoose

@@ -1,6 +1,6 @@
 import { IProperty, IPropertyReference, IPropertySchema } from '@harmonyjs/types-persistence'
 import { Query } from 'mongoose'
-import { toMongoFilterDottedObject } from 'utils/query'
+import { toMongoDottedObject, toMongoFilterDottedObject } from 'utils/query'
 
 import { GraphQLResolveInfo, FieldNode, SelectionNode } from 'graphql'
 
@@ -106,6 +106,19 @@ export function sanitizeFilter(filter? : Filter) {
   }
 
   return toMongoFilterDottedObject({ ...newFilter })
+}
+
+export function sanitizeSort(sort : any) {
+  const sanitizedSort = sort ? toMongoDottedObject(sort) : {}
+  const finalSort : {[key: string]: number} = {}
+
+  Object.keys(sanitizedSort)
+    .sort((a, b) => sanitizedSort[b] - sanitizedSort[a])
+    .forEach((key) => {
+      finalSort[key] = sanitizedSort[key] > 0 ? 1 : -1
+    })
+
+  return finalSort
 }
 
 function extractPopulatePaths({ model, info } : { model: IPropertySchema, info: GraphQLResolveInfo }) {
