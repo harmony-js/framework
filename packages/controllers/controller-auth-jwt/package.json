@@ -32,7 +32,8 @@
     "url": "https://github.com/jvdsande/harmonyjs.git"
   },
   "keywords": [
-    "SPA",
+    "Authentication",
+    "JWT",
     "Harmony",
     "HarmonyJS"
   ],
@@ -42,13 +43,6 @@
     "typescript": "^3.7.5"
   },
   "dependencies": {
-    "@types/cookie": "^0.3.3",
-    "@types/http-proxy": "^1.17.3",
-    "fastify-http-proxy": "^3.0.0",
-    "fastify-static": "^2.6.0",
-    "hapi-react-views": "^10.1.1",
-    "http-proxy": "^1.18.0",
-    "react": "^16.12.0",
-    "react-dom": "^16.12.0"
+    "@types/cookie": "^0.3.3"
   }
 }
