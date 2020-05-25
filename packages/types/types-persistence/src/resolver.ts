@@ -36,9 +36,11 @@ export type ExtendedArgs<
   > = (
   CrudEnum extends Extension ? any :
   'count' extends Extension ? { filter?: FilterArgs<CurrentSchema> } :
+
   'read' extends Extension ? { filter?: FilterArgs<CurrentSchema>, skip?: number, sort?: SortArgs<CurrentSchema> } :
   'get' extends Extension ? { filter?: FilterArgs<CurrentSchema>, skip?: number, sort?: SortArgs<CurrentSchema> } :
   'find' extends Extension ? { filter?: FilterArgs<CurrentSchema>, skip?: number, sort?: SortArgs<CurrentSchema> } :
+
   'readMany' extends Extension
     ? { filter?: FilterArgs<CurrentSchema>, skip?: number, limit?: number, sort?: SortArgs<CurrentSchema> } :
   'list' extends Extension
@@ -46,12 +48,16 @@ export type ExtendedArgs<
 
   'create' extends Extension ? { record: Partial<RecordArgs<CurrentSchema>> } :
   'createMany' extends Extension ? { records: Partial<RecordArgs<CurrentSchema>[]> } :
+
   'update' extends Extension ? { record: RecordArgs<CurrentSchema> } :
   'updateMany' extends Extension ? { records: RecordArgs<CurrentSchema>[] } :
+
   'edit' extends Extension ? { record: RecordArgs<CurrentSchema> } :
   'editMany' extends Extension ? { records: RecordArgs<CurrentSchema>[] } :
+
   'delete' extends Extension ? { _id: string } :
   'deleteMany' extends Extension ? { _ids: string[] } :
+
   any
 )
 
@@ -61,20 +67,26 @@ export type ExtendedType<
   > = (
   CrudEnum extends Extension ? any :
   'count' extends Extension ? number :
+
   'read' extends Extension ? OutputType<CurrentSchema>|null :
   'get' extends Extension ? OutputType<CurrentSchema>|null :
   'find' extends Extension ? OutputType<CurrentSchema>|null :
+
   'readMany' extends Extension ? OutputType<CurrentSchema>[] :
   'list' extends Extension ? OutputType<CurrentSchema>[] :
 
   'create' extends Extension ? OutputType<CurrentSchema>|null :
   'createMany' extends Extension ? OutputType<CurrentSchema>[] :
+
   'update' extends Extension ? OutputType<CurrentSchema>|null :
   'updateMany' extends Extension ? OutputType<CurrentSchema>[] :
+
   'edit' extends Extension ? OutputType<CurrentSchema>|null :
   'editMany' extends Extension ? OutputType<CurrentSchema>[] :
+
   'delete' extends Extension ? OutputType<CurrentSchema>|null :
   'deleteMany' extends Extension ? OutputType<CurrentSchema>[] :
+
   any
   )
 

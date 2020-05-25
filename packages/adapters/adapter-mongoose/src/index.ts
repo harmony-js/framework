@@ -6,7 +6,7 @@ import { GraphQLScalarType } from 'graphql'
 import { ILogger } from '@harmonyjs/logger'
 
 import {
-  Adapter, IAdapter, IEvents, IPropertySchema, SanitizedModel, Scalar,
+  Adapter, IAdapter, IEvents, IProperty, IPropertySchema, SanitizedModel, Scalar,
 } from '@harmonyjs/types-persistence'
 
 import { AdapterMongooseConfiguration } from 'configuration'
@@ -31,7 +31,10 @@ type ExposedVariables = {
 }
 
 type StaticVariables = {
-  toMongooseSchema: typeof toMongooseSchema
+  toMongooseSchema: (
+    schema: IProperty,
+    extractAdapterType?: (adapter: string) => typeof SchemaType
+  ) => Mongoose.SchemaDefinition
   filterToMongoQuery: typeof sanitizeFilter
   sortToMongoSort: typeof sanitizeSort
 }
@@ -354,7 +357,16 @@ const AdapterMongoose : Adapter<
   return instance
 }
 
-AdapterMongoose.toMongooseSchema = toMongooseSchema
+AdapterMongoose.toMongooseSchema = (schema, extractAdapterType) => {
+  const sch = schema.clone()
+
+  // Let Mongoose handle id
+  if (sch.type === 'schema' && sch.of._id) {
+    delete sch.of._id
+  }
+
+  return toMongooseSchema(sch, extractAdapterType, false)
+}
 AdapterMongoose.filterToMongoQuery = sanitizeFilter
 AdapterMongoose.sortToMongoSort = sanitizeSort
 

@@ -20,8 +20,8 @@ function toMongooseType(
   prop : IProperty,
   extractAdapterType: (adapter: string) => typeof SchemaType,
 ) : SchemaType | SchemaDefinition {
-  if (['nested', 'array', 'map'].includes(prop.type)) {
-    return toMongooseSchema(prop, extractAdapterType) // eslint-disable-line
+  if (['nested', 'array'].includes(prop.type)) {
+    return toMongooseSchema(prop, extractAdapterType, true) // eslint-disable-line
   }
 
   if (prop.type === 'reference') {
@@ -44,21 +44,29 @@ function toMongooseType(
 export function toMongooseSchema(
   schema : IProperty,
   extractAdapterType?: (adapter: string) => typeof SchemaType,
+  nested : boolean = false,
 ) : SchemaDefinition {
   const mongooseSchema : SchemaDefinition = {}
   const noExtractAdapterType = () => SchemaTypes.ObjectId
 
-  if (['schema', 'array'].includes(schema.type)) {
+  if (schema.type === 'schema') {
     Object.entries((schema as IPropertySchema|IPropertyArray).of || {})
       .forEach(([key, prop] : [string, IProperty]) => {
         if (prop.type === 'schema') {
-          mongooseSchema[key] = toMongooseSchema(prop, extractAdapterType)
+          mongooseSchema[key] = toMongooseSchema(prop, extractAdapterType, true)
         } else if (prop.type === 'array') {
-          mongooseSchema[key] = [toMongooseSchema(prop.of as IProperty, extractAdapterType)]
+          mongooseSchema[key] = [toMongooseSchema(prop.of as IProperty, extractAdapterType, true)]
         } else {
           mongooseSchema[key] = toMongooseType(prop, extractAdapterType || noExtractAdapterType)
         }
       })
+
+    if (!mongooseSchema._id && nested) {
+      // @ts-ignore
+      mongooseSchema._id = false
+    }
+  } else if (schema.type === 'array') {
+    return [toMongooseSchema(schema.of as IPropertySchema, extractAdapterType, true)] as any
   } else {
     return toMongooseType(schema, extractAdapterType || noExtractAdapterType) as SchemaDefinition
   }
