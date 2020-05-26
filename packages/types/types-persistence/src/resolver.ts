@@ -31,7 +31,7 @@ type OutputType<CurrentSchema extends Schema> = SchemaOutputType<CurrentSchema> 
 
 
 export type ExtendedArgs<
-  Extension extends AliasCrudEnum,
+  Extension extends AliasCrudEnum|'reference',
   CurrentSchema extends Schema
   > = (
   CrudEnum extends Extension ? any :
@@ -62,7 +62,7 @@ export type ExtendedArgs<
 )
 
 export type ExtendedType<
-  Extension extends AliasCrudEnum,
+  Extension extends AliasCrudEnum|'reference',
   CurrentSchema extends Schema
   > = (
   CrudEnum extends Extension ? any :
@@ -131,12 +131,12 @@ export type ScopedModelResolver<
 > = ModelResolver<Args, Return> & { unscoped: ModelResolver<Args, Return> }
 
 export type ScopedModelResolvers<CurrentSchema extends Schema = any> = {
-  [key in AliasCrudEnum]: ScopedModelResolver<
-    ExtendedArgs<key, CurrentSchema>,
-    ExtendedType<key, CurrentSchema>
-  >
-} & {
-  reference: ((args: string | { toString(): string }) => Promise<OutputType<CurrentSchema>|null>)
+  [key in AliasCrudEnum|'reference']: 'reference' extends key
+    ? ((args: string | { toString(): string }) => Promise<OutputType<CurrentSchema>|null>)
+    : ScopedModelResolver<
+      ExtendedArgs<key, CurrentSchema>,
+      ExtendedType<key, CurrentSchema>
+    >
 }
 export type ModelResolvers<CurrentSchema extends Schema = any> = {
   [key in AliasCrudEnum]: ModelResolver<
