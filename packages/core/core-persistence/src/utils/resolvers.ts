@@ -110,8 +110,8 @@ function computeFieldResolver({
           })
 
         wrappedResolvers[mod].reference = (idArg) => internalResolver.reference({
-          source: { _id: idArg },
           ...cArgs,
+          source: { _id: idArg },
           fieldName: '_id',
           foreignFieldName: '_id',
           context: context.external,
