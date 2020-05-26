@@ -4,7 +4,7 @@ import {
   ScopedInternalResolver, UnscopedInternalResolver, InternalResolver, Resolver, ReferenceResolver, Scope, Transform,
   IAdapter, IProperty, IPropertySchema,
   SanitizedModel, ScopedModelResolvers,
-  Scalar, ModelResolvers,
+  Scalar, ModelResolvers, Model,
 } from '@harmonyjs/types-persistence'
 import { ApolloError, ValidationError } from 'apollo-server-core'
 import { GraphQLResolveInfo, GraphQLScalarType } from 'graphql'
@@ -27,7 +27,7 @@ export const queryResolvers: ResolverDefinition[] = [
   {
     type: 'read',
     suffix: '',
-    alias: ['get'],
+    alias: ['get', 'find'],
   }, {
     type: 'readMany',
     suffix: 'List',
@@ -81,6 +81,10 @@ function computeFieldResolver({
   ) => {
     const wrappedResolvers : {[model: string]: ScopedModelResolvers } = {}
 
+    const cArgs = {
+      source, info,
+    }
+
     Object.keys(internalResolvers)
       .forEach((mod) => {
         const internalResolver = internalResolvers[mod]
@@ -90,10 +94,6 @@ function computeFieldResolver({
             const alias = res as AliasCrudEnum
 
             wrappedResolvers[mod] = wrappedResolvers[mod] || {}
-
-            const cArgs = {
-              source, info, context,
-            }
 
             const wrappedResolver = (nArgs : ResolverArgs) => internalResolver[alias]({
               args: nArgs,
@@ -108,6 +108,15 @@ function computeFieldResolver({
 
             wrappedResolvers[mod][alias] = wrappedResolver as any
           })
+
+        wrappedResolvers[mod].reference = (idArg) => internalResolver.reference({
+          source: { _id: idArg },
+          ...cArgs,
+          fieldName: '_id',
+          foreignFieldName: '_id',
+          context: context.external,
+          internal: context.internal,
+        }) as any
       })
 
     return resolver({
@@ -333,7 +342,7 @@ export function getResolvers({
   return resolvers
 }
 
-function makeResolver({
+function makeResolver<Models extends Record<string, Model>>({
   field,
   adapter,
   model,
@@ -348,7 +357,9 @@ function makeResolver({
   type: CrudEnum,
   scope?: Scope<any, any, any, any, false>,
   transform?: Transform<any, any, any, any, any, false>,
-  resolvers: {[model: string]: ModelResolvers<any>},
+  resolvers: {
+    [model in keyof Models]: ModelResolvers<Models[model]['schema']>;
+  },
 }) : ScopedInternalResolver {
   if (!adapter) {
     return async () => null
@@ -377,7 +388,7 @@ function makeResolver({
         source,
         info,
         field,
-        resolvers,
+        resolvers: resolvers as any,
       }))) || args)
 
       value = await adapter[type]({
@@ -398,7 +409,7 @@ function makeResolver({
           info: info || {} as ResolverInfo,
           value,
           error,
-          resolvers,
+          resolvers: resolvers as any,
         })
       }
     } catch (err) {
@@ -575,12 +586,14 @@ function makeReferenceResolver({
   }
 }
 
-export function makeResolvers({
+export function makeResolvers<Models extends Record<string, Model>>({
   adapter, model, modelResolvers,
 } : {
   adapter?: IAdapter
   model: SanitizedModel
-  modelResolvers: Record<string, ModelResolvers>
+  modelResolvers: {
+    [model in keyof Models]: ModelResolvers<Models[model]['schema']>;
+  }
 }) {
   const resolvers :
     Record<AliasCrudEnum, InternalResolver> &

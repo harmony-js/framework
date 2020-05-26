@@ -39,20 +39,22 @@ ${Object.keys(operatorTypes).map((operatorType) => {
 `
 }
 
-export async function defineResolvers<Models extends string|number|symbol>({
+export async function defineResolvers<Models extends Record<string, Model>>({
   models, adapters, defaultAdapterName, modelResolvers,
 } : {
   models: SanitizedModel[]
   adapters: {[key:string]: IAdapter}
   defaultAdapterName?: string
-  modelResolvers: Record<keyof Models, ModelResolvers>
+  modelResolvers: {
+    [model in keyof Models]: ModelResolvers<Models[model]['schema']>;
+  }
 }) {
-  const resolvers: Record<Models, InternalResolvers> = {} as any
+  const resolvers: Record<keyof Models, InternalResolvers> = {} as any
 
   const defaultAdapter = adapters ? adapters[defaultAdapterName || 'mock'] : undefined
 
   models.forEach((model) => {
-    const name = model.schemas.main.graphqlName as Models
+    const name = model.schemas.main.graphqlName as keyof Models
 
     resolvers[name] = makeResolvers({
       adapter: model.adapter ? adapters[model.adapter] : defaultAdapter,
@@ -68,7 +70,9 @@ export async function defineModelResolvers<Models extends {[model: string]: Mode
   internalResolvers, modelResolvers,
 } : {
   internalResolvers: Record<string, InternalResolvers>
-  modelResolvers: Record<keyof Models, ModelResolvers>
+  modelResolvers: {
+    [model in keyof Models]: ModelResolvers<Models[model]['schema']>;
+  }
 }) {
   Object.keys(internalResolvers)
     .forEach((model) => {

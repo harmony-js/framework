@@ -2,7 +2,7 @@ import Logger from '@harmonyjs/logger'
 // Import helpers and types
 import {
   TypedComputedField, TypedComputedQuery, IAdapter, PersistenceInstance,
-  Schema, SchemaField, CrudEnum, Model, PersistenceContext, ModelResolvers,
+  Schema, SchemaField, CrudEnum, Model, PersistenceContext,
 } from '@harmonyjs/types-persistence'
 
 import { configurePersistence } from 'steps/configuration'
@@ -131,16 +131,16 @@ export default function Persistence<
         prefix: config.prefix,
       })
 
-      internal.resolvers = {} as Record<keyof Models, ModelResolvers>
-      const internalResolvers = await defineResolvers({
+      internal.resolvers = {} as any
+      const internalResolvers = await defineResolvers<Models>({
         models: internal.models,
         adapters,
         defaultAdapterName: configuration.defaultAdapter,
-        modelResolvers: internal.resolvers as Record<keyof Models, ModelResolvers>,
+        modelResolvers: internal.resolvers!,
       })
       await defineModelResolvers<Models>({
         internalResolvers,
-        modelResolvers: internal.resolvers,
+        modelResolvers: internal.resolvers!,
       })
       internal.controllers = await defineControllers({
         schema,

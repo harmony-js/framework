@@ -5,7 +5,7 @@ import {
 } from 'property'
 
 export type CrudEnum = 'read'|'readMany'|'count'|'create'|'createMany'|'update'|'updateMany'|'delete'|'deleteMany'
-export type AliasCrudEnum = CrudEnum|'get'|'list'|'edit'|'editMany'
+export type AliasCrudEnum = CrudEnum|'get'|'find'|'list'|'edit'|'editMany'
 
 // Helpers
 type FilterArgs<CurrentSchema extends Schema> = Partial<SchemaInputType<CurrentSchema> & {
@@ -130,16 +130,18 @@ export type ScopedModelResolver<
   Return extends any = any
 > = ModelResolver<Args, Return> & { unscoped: ModelResolver<Args, Return> }
 
-export type ScopedModelResolvers<CurrentSchema extends Schema = Schema> = {
+export type ScopedModelResolvers<CurrentSchema extends Schema = any> = {
   [key in AliasCrudEnum]: ScopedModelResolver<
     ExtendedArgs<key, CurrentSchema>,
     ExtendedType<key, CurrentSchema>
   >
+} & {
+  reference: ((args: string | { toString(): string }) => Promise<OutputType<CurrentSchema>|null>)
 }
-export type ModelResolvers<CurrentSchema extends Schema = Schema> = {
+export type ModelResolvers<CurrentSchema extends Schema = any> = {
   [key in AliasCrudEnum]: ModelResolver<
-    ExtendedArgs<key, Schema>,
-    ExtendedType<key, Schema>
+    ExtendedArgs<key, CurrentSchema>,
+    ExtendedType<key, CurrentSchema>
   >
 }
 
