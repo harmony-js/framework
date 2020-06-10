@@ -205,25 +205,23 @@ function ClientMaker() : IClient {
     },
 
     subscribe(event, callback) {
-      if (local.socket) {
-        local.socket.on(event, callback)
-      }
-
       socketSubscriptions[event] = socketSubscriptions[event] || []
       if (!socketSubscriptions[event].includes(callback)) {
         socketSubscriptions[event].push(callback)
+        if (local.socket) {
+          local.socket.on(event, callback)
+        }
       }
 
       return instance
     },
     unsubscribe(event, callback) {
-      if (local.socket) {
-        local.socket.off(event, callback)
-      }
-
       socketSubscriptions[event] = socketSubscriptions[event] || []
       if (socketSubscriptions[event].includes(callback)) {
         socketSubscriptions[event].splice(socketSubscriptions[event].indexOf(callback), 1)
+        if (local.socket) {
+          local.socket.off(event, callback)
+        }
       }
 
       return instance
