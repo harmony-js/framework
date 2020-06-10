@@ -5,7 +5,7 @@ import Couchbase from 'couchbase'
 import uuid from 'uuid/v1'
 
 import { toMongoDottedObject } from 'utils/query'
-import { N1QLBuilders, createN1QLBuilders } from 'utils/n1ql'
+import { N1QLBuilders, createN1QLBuilders, extractTypeFromModel } from 'utils/n1ql'
 
 import AdapterCouchbaseConfiguration from 'configuration'
 
@@ -35,6 +35,7 @@ const AdapterCouchbase : Adapter<AdapterCouchbaseConfiguration> = function Adapt
       const connectCouchbase = () => {
         local.bucket = cluster.openBucket(config.bucket)
 
+        logger.info('Connecting to Couchbase')
         local.bucket.on('connect', () => {
           local.bucket.manager().createPrimaryIndex(() => {
             logger.info('Couchbase Adapter successfully initialized')
@@ -214,11 +215,11 @@ const AdapterCouchbase : Adapter<AdapterCouchbaseConfiguration> = function Adapt
 
       if (config.identifiers.channels) {
         record.channels = record.channels || []
-        record.channels.push(model.name)
+        record.channels.push(extractTypeFromModel(model))
       }
 
       if (config.identifiers.field) {
-        record[config.identifiers.field] = model.name
+        record[config.identifiers.field] = extractTypeFromModel(model)
       }
 
       const key = _id || uuid()

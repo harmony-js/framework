@@ -1,4 +1,5 @@
 import { SanitizedModel } from '@harmonyjs/types-persistence'
+import Voca from 'voca'
 
 import AdapterCouchbaseConfiguration from 'configuration'
 
@@ -25,12 +26,16 @@ const N1QLOperators : Record<HarmonyOperator, N1QLOperator> = {
   all: null,
 }
 
+export function extractTypeFromModel(model: SanitizedModel) {
+  return Voca.kebabCase(model.name)
+}
+
 function sanitizeOperators(operators : Record<string, any>) {
   const sanitized : Record<string, any> = {}
 
   Object.entries(operators)
     .forEach(([operator, params] : [string, Record<string, any>|any]) => {
-      if (sanitized[operator]) {
+      if (N1QLOperators[operator as HarmonyOperator]) {
         sanitized[operator] = params
       }
 
@@ -107,11 +112,11 @@ export function createN1QLBuilders({ config } : { config: AdapterCouchbaseConfig
   const builders : N1QLBuilders = ({
     buildTypeClause(model) {
       const typeFieldClause = (config.identifiers.field
-        ? `${config.identifiers.field} = "${model.name}"`
+        ? `${config.identifiers.field} = "${extractTypeFromModel(model)}"`
         : null
       )
       const typeChannelsClause = (config.identifiers.channels
-        ? `ANY channel IN channels SATISFIES channel = "${model.name}" END`
+        ? `ANY channel IN channels SATISFIES channel = "${extractTypeFromModel(model)}" END`
         : null
       )
 
@@ -191,7 +196,7 @@ export function createN1QLBuilders({ config } : { config: AdapterCouchbaseConfig
 
       if (Object.keys(sanitizedFilter).length) {
         let mainQuery = `${Object.entries(sanitizedFilter)
-          .filter(([key]) => !['$or', '$and', '$nor'].includes(key))
+          .filter(([key]) => !['$or', '$and', '$nor', '$operators'].includes(key))
           .map(([key, value]) => {
             if (typeof value === 'object') {
               throw new Error('Unsupported type on a Couchbase adapter filter: object')
