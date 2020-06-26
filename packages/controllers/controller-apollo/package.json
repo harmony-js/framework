@@ -1,6 +1,6 @@
 {
   "name": "@harmonyjs/controller-apollo",
-  "version": "1.0.0",
+  "version": "1.0.1-next.0",
   "description": "Apollo controller for Harmony",
   "main": "index.js",
   "publishConfig": {
