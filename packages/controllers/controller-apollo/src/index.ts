@@ -22,6 +22,7 @@ const ControllerApollo : Controller<{
   authentication?: Controller & { validator: string }
 
   apolloConfig?: Omit<Config, 'schema'|'playground'|'introspection'|'mocks'|'mockEntireSchema'|'context'>
+  apolloDisableHealthCheck?: boolean
   routeConfig?: ServerRegistration['routeOptions']
 }> = function ControllerApollo(config) {
   return ({
@@ -125,6 +126,7 @@ const ControllerApollo : Controller<{
         path,
         cors: true,
         routeOptions,
+        disableHealthCheck: config.apolloDisableHealthCheck,
       }))
 
       await apolloServer.installSubscriptionHandlers(server.server)
