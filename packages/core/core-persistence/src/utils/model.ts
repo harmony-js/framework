@@ -431,21 +431,15 @@ export function printSchema({ model, prefix }: { model: SanitizedModel, prefix: 
   // Populate using compute schema, computed overrides main
   extract(model.schemas.computed.of)
 
-  // Add _id to filter and create schemas
-  inputFilterSchema._id = (inputFilterSchema._id as IPropertyID || Types.ID)
-  inputCreateSchema._id = (inputCreateSchema._id as IPropertyID || Types.ID)
-
-  inputFilterSchema._id.for(model.adapter)
-  inputCreateSchema._id.for(model.adapter)
+  // Add _id to filter, sort and create schemas
+  inputFilterSchema._id = (inputFilterSchema._id as IPropertyID || Types.ID).for(model.adapter)
+  inputSortSchema._id = (inputSortSchema._id as IPropertyID || Types.ID).for(model.adapter)
+  inputCreateSchema._id = (inputCreateSchema._id as IPropertyID || Types.ID).for(model.adapter)
 
   // Add _id.required to update schema and output schema
-  outputSchema._id = (outputSchema._id as IPropertyID || Types.ID)
-  outputSchema._id = outputSchema._id.required
+  outputSchema._id = (outputSchema._id as IPropertyID || Types.ID).required.for(model.adapter)
   outputSchema._id = model.external ? outputSchema._id.external : outputSchema._id
-  outputSchema._id.for(model.adapter)
-  inputUpdateSchema._id = (inputUpdateSchema._id as IPropertyID || Types.ID)
-  inputUpdateSchema._id = inputUpdateSchema._id.required
-  inputUpdateSchema._id.for(model.adapter)
+  inputUpdateSchema._id = (inputUpdateSchema._id as IPropertyID || Types.ID).required.for(model.adapter)
 
   // Create _operators before adding _and/_or/_nor
   const ops = createOperatorType({ schema: sanitizeSchema({ schema: inputFilterSchema, name: '' }), prefix })

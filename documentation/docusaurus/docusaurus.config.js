@@ -33,7 +33,7 @@ module.exports = {
           position: 'left',
         },
         {
-          href: 'https://github.com/jvdsande/harmony',
+          href: 'https://github.com/harmony-js/framework',
           label: 'GitHub',
           position: 'right',
         },
