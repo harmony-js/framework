@@ -1,6 +1,6 @@
 {
   "name": "@harmonyjs/controller-cloud-health",
-  "version": "1.0.0-rc2.2",
+  "version": "1.0.0-next.0",
   "description": "REST controller for Harmony",
   "main": "index.js",
   "publishConfig": {
