@@ -31,6 +31,8 @@ enum StateCode {
 
 function HealthEndpoint(checker: HealthChecker): Fastify.RequestHandler {
   return function (req, res) {
+    // Set errored by default, will be overwritten if not in error
+    res.status(StateCode.ERRORED)
     return checker.getStatus()
       .then((status) => {
         switch (status.status) {
@@ -39,7 +41,7 @@ function HealthEndpoint(checker: HealthChecker): Fastify.RequestHandler {
           case State.DOWN: res.status(StateCode.DOWN); break
           case State.STOPPING: res.status(StateCode.DOWN); break
           case State.STOPPED: res.status(StateCode.DOWN); break
-          default: res.status(400); break
+          default: res.status(StateCode.ERRORED); break
         }
 
         return status
@@ -50,6 +52,8 @@ function HealthEndpoint(checker: HealthChecker): Fastify.RequestHandler {
 
 function LivenessEndpoint(checker: HealthChecker): Fastify.RequestHandler {
   return function (req, res) {
+    // Set errored by default, will be overwritten if not in error
+    res.status(StateCode.ERRORED)
     return checker.getStatus()
       .then((status) => {
         switch (status.status) {
@@ -58,7 +62,7 @@ function LivenessEndpoint(checker: HealthChecker): Fastify.RequestHandler {
           case State.DOWN: res.status(StateCode.DOWN); break
           case State.STOPPING: res.status(StateCode.DOWN); break
           case State.STOPPED: res.status(StateCode.DOWN); break
-          default: res.status(400); break
+          default: res.status(StateCode.ERRORED); break
         }
 
         return status
@@ -69,6 +73,8 @@ function LivenessEndpoint(checker: HealthChecker): Fastify.RequestHandler {
 
 function ReadinessEndpoint(checker: HealthChecker): Fastify.RequestHandler {
   return function (req, res) {
+    // Set errored by default, will be overwritten if not in error
+    res.status(StateCode.ERRORED)
     return checker.getStatus()
       .then((status) => {
         switch (status.status) {
@@ -77,7 +83,7 @@ function ReadinessEndpoint(checker: HealthChecker): Fastify.RequestHandler {
           case State.DOWN: res.status(StateCode.DOWN); break
           case State.STOPPING: res.status(StateCode.DOWN); break
           case State.STOPPED: res.status(StateCode.DOWN); break
-          default: res.status(StateCode.OK); break
+          default: res.status(StateCode.ERRORED); break
         }
 
         return status
@@ -87,7 +93,11 @@ function ReadinessEndpoint(checker: HealthChecker): Fastify.RequestHandler {
 }
 
 
-function wrap(path: string): string {
+function wrap(path: string = ''): string {
+  if (!path) {
+    return ''
+  }
+
   if (path.startsWith('/')) {
     return path
   }
@@ -110,11 +120,11 @@ const ControllerCloudHealth : Controller<ControllerCloudHealthConfig> & {
       const instance = config.standalone ? Fastify() : server
 
       instance.register((fastify, opts, done) => {
-        logger.info(`Registering liveness probe on path ${wrap(livenessPath)}`)
+        logger.info(`Registering liveness probe on path ${wrap(config.prefix)}${wrap(livenessPath)}`)
         fastify.get(wrap(livenessPath), LivenessEndpoint(healthcheck))
-        logger.info(`Registering readiness probe on path ${wrap(readinessPath)}`)
+        logger.info(`Registering readiness probe on path ${wrap(config.prefix)}${wrap(readinessPath)}`)
         fastify.get(wrap(readinessPath), ReadinessEndpoint(healthcheck))
-        logger.info(`Registering health probe on path ${wrap(healthPath)}`)
+        logger.info(`Registering health probe on path ${wrap(config.prefix)}${wrap(healthPath)}`)
         fastify.get(wrap(healthPath), HealthEndpoint(healthcheck))
 
         logger.info('All probes registered')
