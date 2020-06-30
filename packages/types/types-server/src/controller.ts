@@ -13,4 +13,4 @@ export interface IController {
   }): Promise<void>
 }
 
-export type Controller<T = void> = (configuration: T) => IController
+export type Controller<T = void, U = {}> = (configuration: T) => IController & U
