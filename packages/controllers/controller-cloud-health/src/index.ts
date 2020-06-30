@@ -1,7 +1,8 @@
 import { Controller } from '@harmonyjs/types-server'
 
 import Fastify from 'fastify'
-import * as health from '@cloudnative/health-connect'
+import * as health from '@cloudnative/health'
+import { HealthChecker, State } from '@cloudnative/health'
 
 type ControllerCloudHealthConfig = {
   prefix?: string
@@ -21,6 +22,70 @@ type ControllerCloudHealthConfig = {
     shutdown: (() => Promise<void>)[]
   }
 }
+
+enum StateCode {
+    OK = 200,
+    DOWN = 503,
+    ERRORED = 500
+}
+
+function HealthEndpoint(checker: HealthChecker): Fastify.RequestHandler {
+  return function (req, res) {
+    return checker.getStatus()
+      .then((status) => {
+        switch (status.status) {
+          case State.STARTING: res.status(StateCode.DOWN); break
+          case State.UP: res.status(StateCode.OK); break
+          case State.DOWN: res.status(StateCode.DOWN); break
+          case State.STOPPING: res.status(StateCode.DOWN); break
+          case State.STOPPED: res.status(StateCode.DOWN); break
+          default: res.status(400); break
+        }
+
+        return status
+      })
+      .catch(() => null)
+  }
+}
+
+function LivenessEndpoint(checker: HealthChecker): Fastify.RequestHandler {
+  return function (req, res) {
+    return checker.getStatus()
+      .then((status) => {
+        switch (status.status) {
+          case State.STARTING: res.status(StateCode.OK); break
+          case State.UP: res.status(StateCode.OK); break
+          case State.DOWN: res.status(StateCode.DOWN); break
+          case State.STOPPING: res.status(StateCode.DOWN); break
+          case State.STOPPED: res.status(StateCode.DOWN); break
+          default: res.status(400); break
+        }
+
+        return status
+      })
+      .catch(() => null)
+  }
+}
+
+function ReadinessEndpoint(checker: HealthChecker): Fastify.RequestHandler {
+  return function (req, res) {
+    return checker.getStatus()
+      .then((status) => {
+        switch (status.status) {
+          case State.STARTING: res.status(StateCode.DOWN); break
+          case State.UP: res.status(StateCode.OK); break
+          case State.DOWN: res.status(StateCode.DOWN); break
+          case State.STOPPING: res.status(StateCode.DOWN); break
+          case State.STOPPED: res.status(StateCode.DOWN); break
+          default: res.status(StateCode.OK); break
+        }
+
+        return status
+      })
+      .catch(() => null)
+  }
+}
+
 
 function wrap(path: string): string {
   if (path.startsWith('/')) {
@@ -46,11 +111,11 @@ const ControllerCloudHealth : Controller<ControllerCloudHealthConfig> & {
 
       instance.register((fastify, opts, done) => {
         logger.info(`Registering liveness probe on path ${wrap(livenessPath)}`)
-        fastify.use(wrap(livenessPath), health.LivenessEndpoint(healthcheck))
+        fastify.get(wrap(livenessPath), LivenessEndpoint(healthcheck))
         logger.info(`Registering readiness probe on path ${wrap(readinessPath)}`)
-        fastify.use(wrap(readinessPath), health.ReadinessEndpoint(healthcheck))
+        fastify.get(wrap(readinessPath), ReadinessEndpoint(healthcheck))
         logger.info(`Registering health probe on path ${wrap(healthPath)}`)
-        fastify.use(wrap(healthPath), health.HealthEndpoint(healthcheck))
+        fastify.get(wrap(healthPath), HealthEndpoint(healthcheck))
 
         logger.info('All probes registered')
 
