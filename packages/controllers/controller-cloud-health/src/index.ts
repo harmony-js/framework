@@ -5,6 +5,7 @@ import Fastify, { FastifyInstance } from 'fastify'
 import * as health from '@cloudnative/health'
 import { HealthChecker, State } from '@cloudnative/health'
 import Prometheus from 'prom-client'
+import Voca from 'voca'
 
 type ControllerCloudHealthCheck = ([string, () => Promise<void>]) | (() => Promise<void>)
 
@@ -149,7 +150,7 @@ const ControllerCloudHealth : Controller<ControllerCloudHealthConfig, Controller
       return [name, promiseGenerator]
     }
 
-    const gauge = new Prometheus.Gauge({ name, help: `${kind} Check` })
+    const gauge = new Prometheus.Gauge({ name: Voca.kebabCase(name), help: `${kind} Check` })
     gauge.set(0)
     register.registerMetric(gauge)
 
