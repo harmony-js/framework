@@ -143,12 +143,13 @@ const ControllerCloudHealth : Controller<ControllerCloudHealthConfig, Controller
     Prometheus.collectDefaultMetrics({ register })
   }
 
-  const statWrap = (name: string, promiseGenerator : () => Promise<void>) : [string, () => Promise<void>] => {
+  const statWrap = (name: string, promiseGenerator : () => Promise<void>, kind: string = 'Health')
+    : [string, () => Promise<void>] => {
     if (config.stats?.disable) {
       return [name, promiseGenerator]
     }
 
-    const gauge = new Prometheus.Gauge({ name, help: `Health Check (${name})` })
+    const gauge = new Prometheus.Gauge({ name, help: `${kind} Check` })
     gauge.set(0)
     register.registerMetric(gauge)
 
@@ -170,25 +171,31 @@ const ControllerCloudHealth : Controller<ControllerCloudHealthConfig, Controller
   (config.checks?.startup || [])
     .map((check, i) => (Array.isArray(check) ? check : [`startup_${i}`, check]) as [string, () => Promise<void>])
     .forEach((check, i) => {
-      healthcheck.registerStartupCheck(new health.StartupCheck(...statWrap(check[0] || `startup_${i}`, check[1])))
+      healthcheck.registerStartupCheck(
+        new health.StartupCheck(...statWrap(check[0] || `startup_${i}`, check[1], 'Startup')),
+      )
     });
 
   (config.checks?.liveness || [])
     .map((check, i) => (Array.isArray(check) ? check : [`liveness_${i}`, check]) as [string, () => Promise<void>])
     .forEach((check, i) => {
-      healthcheck.registerLivenessCheck(new health.LivenessCheck(...statWrap(check[0] || `liveness_${i}`, check[1])))
+      healthcheck.registerLivenessCheck(
+        new health.LivenessCheck(...statWrap(check[0] || `liveness_${i}`, check[1], 'Liveness')),
+      )
     });
 
   (config.checks?.readiness || [])
     .map((check, i) => (Array.isArray(check) ? check : [`readiness_${i}`, check]) as [string, () => Promise<void>])
     .forEach((check, i) => {
-      healthcheck.registerReadinessCheck(new health.ReadinessCheck(...statWrap(check[0] || `readiness_${i}`, check[1])))
+      healthcheck.registerReadinessCheck(
+        new health.ReadinessCheck(...statWrap(check[0] || `readiness_${i}`, check[1], 'Readiness')),
+      )
     });
 
   (config.checks?.shutdown || [])
     .map((check, i) => (Array.isArray(check) ? check : [`shutdown_${i}`, check]) as [string, () => Promise<void>])
     .forEach((check, i) => {
-      healthcheck.registerShutdownCheck(new health.ShutdownCheck(...statWrap(check[0] || `shutdown_${i}`, check[1])))
+      healthcheck.registerShutdownCheck(new health.ShutdownCheck(check[0] || `shutdown_${i}`, check[1]))
     })
 
   const registerProbes = (instance : FastifyInstance) => {
