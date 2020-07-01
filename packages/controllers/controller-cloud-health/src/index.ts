@@ -29,8 +29,8 @@ type ControllerCloudHealthConfig = {
   }
 
   stats?: {
-    disable: boolean
-    defaultMetrics: boolean
+    disable?: boolean
+    defaultMetrics?: boolean
   }
 }
 
@@ -150,7 +150,7 @@ const ControllerCloudHealth : Controller<ControllerCloudHealthConfig, Controller
       return [name, promiseGenerator]
     }
 
-    const gauge = new Prometheus.Gauge({ name: Voca.kebabCase(name), help: `${kind} Check` })
+    const gauge = new Prometheus.Gauge({ name: Voca.snakeCase(name), help: `${kind} Check` })
     gauge.set(0)
     register.registerMetric(gauge)
 
@@ -204,7 +204,9 @@ const ControllerCloudHealth : Controller<ControllerCloudHealthConfig, Controller
       fastify.get(wrap(livenessPath), LivenessEndpoint(healthcheck))
       fastify.get(wrap(readinessPath), ReadinessEndpoint(healthcheck))
       fastify.get(wrap(healthPath), HealthEndpoint(healthcheck))
-      fastify.get(wrap(statsPath), StatsEndpoint(healthcheck, register))
+      if (!config.stats?.disable) {
+        fastify.get(wrap(statsPath), StatsEndpoint(healthcheck, register))
+      }
 
       done()
     }, {
@@ -216,6 +218,9 @@ const ControllerCloudHealth : Controller<ControllerCloudHealthConfig, Controller
     logger.info(`Registered liveness probe on path ${wrap(config.prefix)}${wrap(livenessPath)}`)
     logger.info(`Registered readiness probe on path ${wrap(config.prefix)}${wrap(readinessPath)}`)
     logger.info(`Registered health probe on path ${wrap(config.prefix)}${wrap(healthPath)}`)
+    if (!config.stats?.disable) {
+      logger.info(`Registered stats endpoint on path ${wrap(config.prefix)}${wrap(statsPath)}`)
+    }
   }
 
   if (config.standalone) {
