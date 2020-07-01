@@ -4,31 +4,40 @@ import { ILogger } from '@harmonyjs/logger'
 import Fastify, { FastifyInstance } from 'fastify'
 import * as health from '@cloudnative/health'
 import { HealthChecker, State } from '@cloudnative/health'
+import Prometheus from 'prom-client'
+
+type ControllerCloudHealthCheck = ([string, () => Promise<void>]) | (() => Promise<void>)
 
 type ControllerCloudHealthConfig = {
   prefix?: string
   readinessPath?: string
   livenessPath?: string
   healthPath?: string
+  statsPath?: string
 
   standalone?: {
     host: string
     port: number
   }
 
-  checks: {
-    startup?: (() => Promise<void>)[]
-    liveness?: (() => Promise<void>)[]
-    readiness?: (() => Promise<void>)[]
-    shutdown?: (() => Promise<void>)[]
+  checks?: {
+    startup?: ControllerCloudHealthCheck[]
+    liveness?: ControllerCloudHealthCheck[]
+    readiness?: ControllerCloudHealthCheck[]
+    shutdown?: ControllerCloudHealthCheck[]
+  }
+
+  stats?: {
+    disable: boolean
+    defaultMetrics: boolean
   }
 }
 
 type ControllerCloudHealthProperties = {
-  registerStartupCheck(check: () => Promise<void>, name?: string): void
-  registerLivenessCheck(check: () => Promise<void>, name?: string): void
-  registerReadinessCheck(check: () => Promise<void>, name?: string): void
-  registerShutdownCheck(check: () => Promise<void>, name?: string): void
+  registerStartupCheck(name: string, check: () => Promise<void>): void
+  registerLivenessCheck(name: string, check: () => Promise<void>): void
+  registerReadinessCheck(name: string, check: () => Promise<void>): void
+  registerShutdownCheck(name: string, check: () => Promise<void>): void
 }
 
 enum StateCode {
@@ -100,6 +109,13 @@ function ReadinessEndpoint(checker: HealthChecker): Fastify.RequestHandler {
   }
 }
 
+function StatsEndpoint(checker: HealthChecker, register: Prometheus.Registry): Fastify.RequestHandler {
+  return async function () {
+    await checker.getStatus()
+    return register.metrics()
+  }
+}
+
 
 function wrap(path: string = ''): string {
   if (!path) {
@@ -119,31 +135,68 @@ const ControllerCloudHealth : Controller<ControllerCloudHealthConfig, Controller
   const readinessPath = config.readinessPath || '/ready'
   const livenessPath = config.livenessPath || '/live'
   const healthPath = config.healthPath || '/health'
+  const statsPath = config.statsPath || '/stats'
 
   const healthcheck = new health.HealthChecker()
+  const register = new Prometheus.Registry()
+  if (config.stats?.defaultMetrics) {
+    Prometheus.collectDefaultMetrics({ register })
+  }
+
+  const statWrap = (name: string, promiseGenerator : () => Promise<void>) : [string, () => Promise<void>] => {
+    if (config.stats?.disable) {
+      return [name, promiseGenerator]
+    }
+
+    const gauge = new Prometheus.Gauge({ name, help: `Health Check (${name})` })
+    gauge.set(0)
+    register.registerMetric(gauge)
+
+    return [name, () => new Promise((resolve, reject) => {
+      promiseGenerator()
+        .then(() => {
+          gauge.set(1)
+          resolve()
+        })
+        .catch((err) => {
+          gauge.set(0)
+          reject(err)
+        })
+    })]
+  }
+
   const standalone = config.standalone ? Fastify() : null;
 
-  (config.checks.startup || []).forEach((check, i) => {
-    healthcheck.registerStartupCheck(new health.StartupCheck(`startup_${i}`, check))
-  });
+  (config.checks?.startup || [])
+    .map((check, i) => (Array.isArray(check) ? check : [`startup_${i}`, check]) as [string, () => Promise<void>])
+    .forEach((check, i) => {
+      healthcheck.registerStartupCheck(new health.StartupCheck(...statWrap(check[0] || `startup_${i}`, check[1])))
+    });
 
-  (config.checks.liveness || []).forEach((check, i) => {
-    healthcheck.registerLivenessCheck(new health.LivenessCheck(`liveness_${i}`, check))
-  });
+  (config.checks?.liveness || [])
+    .map((check, i) => (Array.isArray(check) ? check : [`liveness_${i}`, check]) as [string, () => Promise<void>])
+    .forEach((check, i) => {
+      healthcheck.registerLivenessCheck(new health.LivenessCheck(...statWrap(check[0] || `liveness_${i}`, check[1])))
+    });
 
-  (config.checks.readiness || []).forEach((check, i) => {
-    healthcheck.registerReadinessCheck(new health.ReadinessCheck(`readiness_${i}`, check))
-  });
+  (config.checks?.readiness || [])
+    .map((check, i) => (Array.isArray(check) ? check : [`readiness_${i}`, check]) as [string, () => Promise<void>])
+    .forEach((check, i) => {
+      healthcheck.registerReadinessCheck(new health.ReadinessCheck(...statWrap(check[0] || `readiness_${i}`, check[1])))
+    });
 
-  (config.checks.shutdown || []).forEach((check, i) => {
-    healthcheck.registerShutdownCheck(new health.ShutdownCheck(`shutdown_${i}`, check))
-  })
+  (config.checks?.shutdown || [])
+    .map((check, i) => (Array.isArray(check) ? check : [`shutdown_${i}`, check]) as [string, () => Promise<void>])
+    .forEach((check, i) => {
+      healthcheck.registerShutdownCheck(new health.ShutdownCheck(...statWrap(check[0] || `shutdown_${i}`, check[1])))
+    })
 
   const registerProbes = (instance : FastifyInstance) => {
     instance.register((fastify, opts, done) => {
       fastify.get(wrap(livenessPath), LivenessEndpoint(healthcheck))
       fastify.get(wrap(readinessPath), ReadinessEndpoint(healthcheck))
       fastify.get(wrap(healthPath), HealthEndpoint(healthcheck))
+      fastify.get(wrap(statsPath), StatsEndpoint(healthcheck, register))
 
       done()
     }, {
@@ -165,17 +218,17 @@ const ControllerCloudHealth : Controller<ControllerCloudHealthConfig, Controller
   return ({
     name: 'ControllerCloudHealth',
 
-    registerStartupCheck(check, name) {
-      healthcheck.registerStartupCheck(new health.StartupCheck(name || 'startup', check))
+    registerStartupCheck(name, check) {
+      healthcheck.registerStartupCheck(new health.StartupCheck(...statWrap(name || 'startup', check)))
     },
-    registerLivenessCheck(check, name) {
-      healthcheck.registerLivenessCheck(new health.LivenessCheck(name || 'liveness', check))
+    registerLivenessCheck(name, check) {
+      healthcheck.registerLivenessCheck(new health.LivenessCheck(...statWrap(name || 'liveness', check)))
     },
-    registerReadinessCheck(check, name) {
-      healthcheck.registerReadinessCheck(new health.ReadinessCheck(name || 'readiness', check))
+    registerReadinessCheck(name, check) {
+      healthcheck.registerReadinessCheck(new health.ReadinessCheck(...statWrap(name || 'readiness', check)))
     },
-    registerShutdownCheck(check, name) {
-      healthcheck.registerShutdownCheck(new health.ShutdownCheck(name || 'shutdown', check))
+    registerShutdownCheck(name, check) {
+      healthcheck.registerShutdownCheck(new health.ShutdownCheck(...statWrap(name || 'shutdown', check)))
     },
 
     async initialize({ logger, server }) {
