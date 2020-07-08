@@ -555,7 +555,15 @@ function makeReferenceResolver({
         type: 'single',
       })
 
-      return loader.loadMany(source[fieldName].filter((s: string) => !!s).map((s: string) => String(s)))
+      const result = await loader.loadMany(
+        source[fieldName]
+          .filter((s: string) => !!s)
+          .map((s: string) => String(s))
+          .filter((e : any, i: number, a: any[]) => a.indexOf(e) === i),
+      )
+
+      // Filter out null value
+      return result.filter((e: any) => !!e)
     }
 
     if (fieldName === '_id' && type === 'resolveRef') {
