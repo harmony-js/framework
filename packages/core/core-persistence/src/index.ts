@@ -234,6 +234,6 @@ function shallowMerge(...obj : object[]) {
   )
 }
 
-export function extendTypes<T extends object>(types : T) {
-  return shallowMerge(Types, types) as typeof Types & T
+export function extendTypes<T extends object, U extends object = typeof Types>(types : T, baseTypes : U = Types as any) {
+  return shallowMerge(Types, baseTypes) as typeof baseTypes & T
 }
