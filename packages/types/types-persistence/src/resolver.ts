@@ -24,7 +24,7 @@ type SortArgs<CurrentSchema extends Schema> = {
 type CreateRecordArgs<CurrentSchema extends Schema> = SchemaInputType<CurrentSchema> & (
   unknown extends CurrentSchema['_id'] ? { _id?: string } : {}
 )
-type RecordArgs<CurrentSchema extends Schema> = SchemaInputType<CurrentSchema> & (
+type UpdateRecordArgs<CurrentSchema extends Schema> = Partial<SchemaInputType<CurrentSchema>> & (
   unknown extends CurrentSchema['_id'] ? { _id: string } : {}
 )
 
@@ -52,11 +52,11 @@ export type ExtendedArgs<
   'create' extends Extension ? { record: CreateRecordArgs<CurrentSchema> } :
   'createMany' extends Extension ? { records: CreateRecordArgs<CurrentSchema>[] } :
 
-  'update' extends Extension ? { record: RecordArgs<CurrentSchema> } :
-  'updateMany' extends Extension ? { records: RecordArgs<CurrentSchema>[] } :
+  'update' extends Extension ? { record: UpdateRecordArgs<CurrentSchema> } :
+  'updateMany' extends Extension ? { records: UpdateRecordArgs<CurrentSchema>[] } :
 
-  'edit' extends Extension ? { record: RecordArgs<CurrentSchema> } :
-  'editMany' extends Extension ? { records: RecordArgs<CurrentSchema>[] } :
+  'edit' extends Extension ? { record: UpdateRecordArgs<CurrentSchema> } :
+  'editMany' extends Extension ? { records: UpdateRecordArgs<CurrentSchema>[] } :
 
   'delete' extends Extension ? { _id: string } :
   'deleteMany' extends Extension ? { _ids: string[] } :
