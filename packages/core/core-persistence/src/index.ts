@@ -32,6 +32,7 @@ export {
 
   // Useful helpers
   SchemaOutputType, SchemaInputType,
+  HarmonyCreateType, HarmonyUpdateType, HarmonyFilterType, HarmonySortType,
 } from '@harmonyjs/types-persistence'
 
 export default function Persistence<
@@ -212,6 +213,8 @@ export function query<
   return f
 }
 
+export const mutation = query
+
 
 function shallowMerge(...obj : object[]) {
   const prototype : any = {}
@@ -234,6 +237,9 @@ function shallowMerge(...obj : object[]) {
   )
 }
 
-export function extendTypes<T extends object, U extends object = typeof Types>(types : T, baseTypes : U = Types as any) {
-  return shallowMerge(Types, baseTypes) as typeof baseTypes & T
+export function extendTypes<
+  T extends object,
+  U extends object = typeof Types
+>(types : T, baseTypes? : U) {
+  return shallowMerge(baseTypes || Types, types) as typeof baseTypes & T
 }

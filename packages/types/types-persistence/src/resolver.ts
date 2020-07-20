@@ -32,6 +32,10 @@ type OutputType<CurrentSchema extends Schema> = SchemaOutputType<CurrentSchema> 
   unknown extends CurrentSchema['_id'] ? { _id: string } : {}
 )
 
+export type HarmonyFilterType<CurrentSchema extends Schema> = FilterArgs<CurrentSchema>
+export type HarmonySortType<CurrentSchema extends Schema> = SortArgs<CurrentSchema>
+export type HarmonyCreateType<CurrentSchema extends Schema> = CreateRecordArgs<CurrentSchema>
+export type HarmonyUpdateType<CurrentSchema extends Schema> = CreateRecordArgs<CurrentSchema>
 
 export type ExtendedArgs<
   Extension extends AliasCrudEnum|'reference',
