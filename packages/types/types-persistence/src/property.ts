@@ -171,8 +171,8 @@ interface IPropertyJSONBase<O, I, R extends boolean> extends IPropertyBase {
 
   as<O1, I1 = I>(): true extends R ? IPropertyJSONRequired<O1, I1> : IPropertyJSON<O1, I1>
 }
-export interface IPropertyJSON<O = any, I = any> extends IPropertyJSONBase<O, I, false> {}
-export interface IPropertyJSONRequired<O = any, I = any> extends IPropertyJSONBase<O, I, true> {}
+export interface IPropertyJSON<O = any|undefined, I = any|undefined> extends IPropertyJSONBase<O, I, false> {}
+export interface IPropertyJSONRequired<O = any|undefined, I = any|undefined> extends IPropertyJSONBase<O, I, true> {}
 
 
 interface IPropertyDateBase<O, I, R extends boolean> extends IPropertyBase {

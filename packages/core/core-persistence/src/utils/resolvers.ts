@@ -511,6 +511,10 @@ function makeReferenceResolver({
           const element = source && source[fieldName]
           const _id = (element && element._id) ? element._id : element
 
+          if (!_id) {
+            return null
+          }
+
           return ({
             __typename: model.schemas.main.graphqlName,
             _id,
@@ -522,11 +526,16 @@ function makeReferenceResolver({
           && source[fieldName].map((element: { _id: string }) => {
             const _id = (element && element._id) ? element._id : element
 
+            if (!_id) {
+              return null
+            }
+
             return ({
               __typename: model.schemas.main.graphqlName,
               _id,
             })
-          }),
+          })
+            .filter((r: any) => !!r),
       }[type]()
     }
 
