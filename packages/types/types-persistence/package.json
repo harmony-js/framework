@@ -1,6 +1,6 @@
 {
   "name": "@harmonyjs/types-persistence",
-  "version": "1.0.4-next.4",
+  "version": "1.0.4-next.5",
   "publishConfig": {
     "access": "public"
   },
