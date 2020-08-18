@@ -45,7 +45,7 @@ export function toMongooseSchema(
   schema : IProperty,
   extractAdapterType?: (adapter: string) => typeof SchemaType,
   nested : boolean = false,
-) : SchemaDefinition {
+) : SchemaDefinition|SchemaDefinition[''] {
   const mongooseSchema : SchemaDefinition = {}
   const noExtractAdapterType = () => SchemaTypes.ObjectId
 
@@ -53,9 +53,17 @@ export function toMongooseSchema(
     Object.entries((schema as IPropertySchema|IPropertyArray).of || {})
       .forEach(([key, prop] : [string, IProperty]) => {
         if (prop.type === 'schema') {
-          mongooseSchema[key] = toMongooseSchema(prop, extractAdapterType, true)
+          mongooseSchema[key] = {
+            type: toMongooseSchema(prop, extractAdapterType, true),
+            unique: prop.isUnique,
+            index: prop.isIndexed,
+          }
         } else if (prop.type === 'array') {
-          mongooseSchema[key] = [toMongooseSchema(prop.of as IProperty, extractAdapterType, true)]
+          mongooseSchema[key] = {
+            type: [toMongooseSchema(prop.of as IProperty, extractAdapterType, true)],
+            unique: prop.isUnique,
+            index: prop.isIndexed,
+          }
         } else {
           mongooseSchema[key] = toMongooseType(prop, extractAdapterType || noExtractAdapterType)
         }
@@ -66,7 +74,11 @@ export function toMongooseSchema(
       mongooseSchema._id = false
     }
   } else if (schema.type === 'array') {
-    return [toMongooseSchema(schema.of as IPropertySchema, extractAdapterType, true)] as any
+    return {
+      type: [toMongooseSchema(schema.of as IPropertySchema, extractAdapterType, true)] as any,
+      unique: schema.isUnique,
+      index: schema.isIndexed,
+    }
   } else {
     return toMongooseType(schema, extractAdapterType || noExtractAdapterType) as SchemaDefinition
   }
