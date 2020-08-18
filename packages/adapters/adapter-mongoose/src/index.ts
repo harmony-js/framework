@@ -1,4 +1,6 @@
-import Mongoose, { Connection, SchemaType, SchemaTypes } from 'mongoose'
+import Mongoose, {
+  Connection, SchemaDefinition, SchemaType, SchemaTypes,
+} from 'mongoose'
 import Voca from 'voca'
 import { GraphQLObjectId } from 'graphql-objectid-scalar'
 import { GraphQLScalarType } from 'graphql'
@@ -88,7 +90,7 @@ const AdapterMongoose : Adapter<
           delete model.schemas.main.of._id
         }
 
-        const schema = new Mongoose.Schema(toMongooseSchema(model.schemas.main, extractAdapterType))
+        const schema = new Mongoose.Schema(toMongooseSchema(model.schemas.main, extractAdapterType) as SchemaDefinition)
         local.schemas[model.name] = model.schemas.main
         local.externals[model.name] = model.external
 
@@ -365,7 +367,7 @@ AdapterMongoose.toMongooseSchema = (schema, extractAdapterType) => {
     delete sch.of._id
   }
 
-  return toMongooseSchema(sch, extractAdapterType, false)
+  return toMongooseSchema(sch, extractAdapterType, false) as SchemaDefinition
 }
 AdapterMongoose.filterToMongoQuery = sanitizeFilter
 AdapterMongoose.sortToMongoSort = sanitizeSort
