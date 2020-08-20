@@ -10,17 +10,13 @@ const ControllerPersistenceEvents : Controller<{ events: any }> = function Contr
       const { events } = config
 
       events.on('updated', ({ model, document }) => {
-        if(document?._id) {
-          socket.to('persistence-events').emit(`${model.name}-updated`, document._id)
-          socket.to('persistence-events').emit(`${model.name}-saved`, document._id)
-        }
+        socket.to('persistence-events').emit(`${model.name}-updated`, document?._id)
+        socket.to('persistence-events').emit(`${model.name}-saved`, document?._id)
       })
 
       events.on('removed', ({ model, document }) => {
-        if(document?._id) {
-          socket.to('persistence-events').emit(`${model.name}-updated`, document._id)
-          socket.to('persistence-events').emit(`${model.name}-removed`, document._id)
-        }
+        socket.to('persistence-events').emit(`${model.name}-updated`, document?._id)
+        socket.to('persistence-events').emit(`${model.name}-removed`, document?._id)
       })
 
       socket.on('connection', (s) => {
