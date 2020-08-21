@@ -63,6 +63,11 @@ export function toMongooseSchema(
             type: [toMongooseSchema(prop.of as IProperty, extractAdapterType, true)],
             unique: prop.isUnique,
             index: prop.isIndexed,
+            default: undefined,
+          }
+
+          if (prop.isRequired) {
+            (mongooseSchema[key] as SchemaTypeOpts<any>).default = []
           }
         } else {
           mongooseSchema[key] = toMongooseType(prop, extractAdapterType || noExtractAdapterType)
