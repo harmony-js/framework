@@ -429,6 +429,14 @@ function makeResolver<Models extends Record<string, Model>>({
   }
 }
 
+function matchField(field: string|string[], key: string) {
+  if (Array.isArray(field)) {
+    return !!field.find((f) => String(f) === key)
+  }
+
+  return String(field) === key
+}
+
 /* eslint-disable no-param-reassign */
 function initializeLoader({
   internal,
@@ -457,10 +465,10 @@ function initializeLoader({
         })
 
         if (type === 'single') {
-          return keys.map((k) => docs.find((doc) => doc && String(doc[field]) === String(k)))
+          return keys.map((k) => docs.find((doc) => doc && matchField(doc[field], String(k))))
         }
 
-        return keys.map((k) => docs.filter((doc) => doc && String(doc[field]) === String(k)))
+        return keys.map((k) => docs.filter((doc) => doc && matchField(doc[field], String(k))))
       }),
       async load(key: any) {
         const stringified = String(key)
