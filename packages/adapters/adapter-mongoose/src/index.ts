@@ -90,7 +90,10 @@ const AdapterMongoose : Adapter<
           delete model.schemas.main.of._id
         }
 
-        const schema = new Mongoose.Schema(toMongooseSchema(model.schemas.main, extractAdapterType) as SchemaDefinition)
+        const schema = new Mongoose.Schema(
+          toMongooseSchema(model.schemas.main, extractAdapterType) as SchemaDefinition,
+          { typePojoToMixed: false },
+        )
         local.schemas[model.name] = model.schemas.main
         local.externals[model.name] = model.external
 
