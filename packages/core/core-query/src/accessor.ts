@@ -63,15 +63,21 @@ function AccessorQueryBuilder<T = {[key: string]: any}>(
   }
 
   function promise() : Promise<T> {
-    return Builder<T>(client)
+    const builder = Builder<T>(client)
       .withName(name + suffix[type])
-      .withSelection(local.selection || { _id: true })
       .withArgs({
         filter: local.filter,
         sort: local.sort,
         skip: local.skip,
         limit: local.limit,
       })
+
+    if (type !== 'count') {
+      builder
+        .withSelection(local.selection || { _id: true })
+    }
+
+    return builder
       .asQuery()
   }
 
