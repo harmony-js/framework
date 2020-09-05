@@ -2,7 +2,7 @@ import { IProperty, IPropertyReference, IPropertySchema } from '@harmonyjs/types
 import { Query } from 'mongoose'
 import { toMongoDottedObject, toMongoFilterDottedObject } from 'utils/query'
 
-import { GraphQLResolveInfo, FieldNode, SelectionNode } from 'graphql'
+import { FieldNode, GraphQLResolveInfo, SelectionNode } from 'graphql'
 
 type Filter = Record<string, any>
 
@@ -30,6 +30,15 @@ function sanitizeOperators(operators : Record<string, any>) {
       // If the operator already exists, use it directly
       if (operatorMap[operator]) {
         sanitized[operatorMap[operator]] = params
+
+        if (operator === 'regex') {
+          const parts = params.split('/')
+
+          if (parts.length > 2) {
+            sanitized.$options = parts.pop()
+            sanitized.$regex = parts.join('/').slice(1)
+          }
+        }
       }
 
       // In the case of a date, transform to ISO String
