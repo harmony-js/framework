@@ -75,7 +75,6 @@ export async function build({
       const filePathDepth = path.relative(fileDirPath, dirPath) || '.'
 
       if (!resolvedInSource) {
-        reporter.info('Full: ' + full)
         return full
       }
 

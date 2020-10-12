@@ -8,7 +8,7 @@ export type CrudEnum = 'read'|'readMany'|'count'|'create'|'createMany'|'update'|
 export type AliasCrudEnum = CrudEnum|'get'|'find'|'list'|'edit'|'editMany'
 
 // Helpers
-type FilterArgs<CurrentSchema extends Schema> = Partial<SchemaInputType<CurrentSchema> & {
+export type FilterArgs<CurrentSchema extends Schema> = Partial<SchemaInputType<CurrentSchema> & {
   _and?: FilterArgs<CurrentSchema>[]
   _or?: FilterArgs<CurrentSchema>[]
   _nor?: FilterArgs<CurrentSchema>[]
@@ -17,14 +17,14 @@ type FilterArgs<CurrentSchema extends Schema> = Partial<SchemaInputType<CurrentS
   unknown extends CurrentSchema['_id'] ? { _id?: string } : {}
 )>
 
-type SortArgs<CurrentSchema extends Schema> = {
+export type SortArgs<CurrentSchema extends Schema> = {
   [key in keyof CurrentSchema]?: CurrentSchema[key] extends Schema ? SortArgs<CurrentSchema[key]> : number
 }
 
-type CreateRecordArgs<CurrentSchema extends Schema> = SchemaInputType<CurrentSchema> & (
+export type CreateRecordArgs<CurrentSchema extends Schema> = SchemaInputType<CurrentSchema> & (
   unknown extends CurrentSchema['_id'] ? { _id?: string } : {}
 )
-type UpdateRecordArgs<CurrentSchema extends Schema> = Partial<SchemaInputType<CurrentSchema>> & (
+export type UpdateRecordArgs<CurrentSchema extends Schema> = Partial<SchemaInputType<CurrentSchema>> & (
   unknown extends CurrentSchema['_id'] ? { _id: string } : {}
 )
 
