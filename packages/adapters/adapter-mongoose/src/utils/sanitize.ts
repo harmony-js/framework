@@ -1,5 +1,5 @@
 import { IProperty, IPropertyReference, IPropertySchema } from '@harmonyjs/types-persistence'
-import {Query, Types} from 'mongoose'
+import { Query, Types } from 'mongoose'
 import { toMongoDottedObject, toMongoFilterDottedObject } from 'utils/query'
 
 import { FieldNode, GraphQLResolveInfo, SelectionNode } from 'graphql'
