@@ -74,18 +74,8 @@ export async function build({
       const fileDirPath = filePath.replace(/[^/]*?$/, '')
       const filePathDepth = path.relative(fileDirPath, dirPath) || '.'
 
-      /*
-      reporter.info(JSON.stringify({
-        full,
-        resolvedPath,
-        resolvedInSource,
-        resolvedSpec,
-        fileDirPath,
-        filePathDepth,
-      }, null, 2))
-       */
-
       if (!resolvedInSource) {
+        reporter.info('Full: ' + full)
         return full
       }
 

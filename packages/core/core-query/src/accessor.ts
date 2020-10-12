@@ -82,14 +82,18 @@ function AccessorQueryBuilder<T = {[key: string]: any}>(
   }
 
   async function subscription(force: boolean) {
-    const result = await promise()
-    const cached = JSON.stringify(result)
+    try {
+      const result = await promise()
+      const cached = JSON.stringify(result)
 
-    if (force || cached !== local.subscription.cached) {
-      local.subscription.callbacks.forEach((callback) => callback(result))
+      if (force || cached !== local.subscription.cached) {
+        local.subscription.callbacks.forEach((callback) => callback(result))
+      }
+
+      local.subscription.cached = cached
+    } catch (err) {
+      // Ignore error on subscriptions
     }
-
-    local.subscription.cached = cached
   }
 
   function updateSubscription(unsubscribe ?: boolean) {

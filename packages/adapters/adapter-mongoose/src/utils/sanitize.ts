@@ -1,5 +1,5 @@
 import { IProperty, IPropertyReference, IPropertySchema } from '@harmonyjs/types-persistence'
-import { Query } from 'mongoose'
+import {Query, Types} from 'mongoose'
 import { toMongoDottedObject, toMongoFilterDottedObject } from 'utils/query'
 
 import { FieldNode, GraphQLResolveInfo, SelectionNode } from 'graphql'
@@ -44,6 +44,11 @@ function sanitizeOperators(operators : Record<string, any>) {
       // In the case of a date, transform to ISO String
       if (params instanceof Date) {
         sanitized[operatorMap[operator]] = params.toISOString()
+      }
+
+      // In the case of an ObjectId, transform to String
+      if (Types.ObjectId.isValid(params)) {
+        sanitized[operatorMap[operator]] = String(params)
       }
 
       // Array Operator: some. In this case, the params are operators and need to be sanitized
