@@ -217,8 +217,8 @@ const AdapterMongoose : Adapter<
       return buildPopulatedQuery({
         query: mongooseModel
           .findOne(filter || {})
-          .skip(args.skip || 0)
-          .sort(sort),
+          .sort(sort)
+          .skip(args.skip || 0),
       })
     },
 
@@ -234,9 +234,9 @@ const AdapterMongoose : Adapter<
       return buildPopulatedQuery({
         query: mongooseModel
           .find(filter || {})
+          .sort(sort)
           .limit(args.limit || 0)
-          .skip(args.skip || 0)
-          .sort(sort),
+          .skip(args.skip || 0),
       })
     },
 
